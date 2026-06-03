@@ -1,8 +1,11 @@
 # Templates
 
-Use these verbatim. Do not invent a different layout — the structure is load-bearing (the
-manifest is the parallel-track contract + update state; the `PRD.md`/`IMPLEMENTATION.md` split is
-the human/agent separation).
+Use these verbatim. Do not invent a different layout — the structure is load-bearing (the manifest
+is the parallel-track contract + update state). Locally the bundle keeps **two separate files**:
+`PRD.md` (human-facing) and `IMPLEMENTATION.md` (the per-section, environment-agnostic
+implementation prompts). They stay separate on disk; the published **Lark Docx merges them per
+section** (see `reference.md`), placing each section's prompt as a **copyable code block** under that
+section's heading.
 
 ## `manifest.json`
 
@@ -56,14 +59,21 @@ the human/agent separation).
 
 ## `PRD.md` (human-facing; sections ordered by implementation sequence)
 
+`PRD.md` is **human-only** — what / why / acceptance + screenshots. It does **not** embed the
+implementation prompt; each section ends with a one-line **pointer** to the matching
+`IMPLEMENTATION.md` block. The copy-pasteable prompt is merged in only when publishing to Lark (per
+section, as a code block — see `reference.md`).
+
 ```markdown
 # PRD — <feature>
 **Branch:** <branch> · **Base:** <base @ sha> · **Designer:** <name> · **Date:** <date>
 **Status:** Ready for dev
 
-## Summary
-<2–3 sentences over the whole change. Note it was prototyped and should be reproduced
-production-quality per the per-section implementation prompts.>
+# Summary
+- <what this change is, at a glance>
+- <the user-facing outcome / why it matters>
+- Prototyped — reproduce **production-quality** per each section's implementation prompt
+  (in `IMPLEMENTATION.md`, merged under the section in the Lark doc).
 
 ---
 ## C1 — <title>            [implement first · no deps]
@@ -75,14 +85,17 @@ production-quality per the per-section implementation prompts.>
 **Acceptance criteria**
 - [ ] …
 
-── Implementation prompt ──
-<the C1 block from IMPLEMENTATION.md, inline, so a dev can read+build one section at a time>
+_Implementation prompt → `IMPLEMENTATION.md` §C1 (merged into the Lark doc under this section as a copyable code block)._
 
 ## C2 — <title>            [depends on C1]
 ![C2](screenshots/C2-settings.png)
 **Legend:** ② <callout>
 …
 ```
+
+> The PRD section heading keeps the stable `C1`/`C2` id (it's the join key across the manifest,
+> `depends_on`, screenshot filenames, and the Lark `block_map`; it stays fixed across reorders so
+> in-place updates don't break).
 
 ## `IMPLEMENTATION.md` (per-section, ordered; **environment-agnostic** — no SSH/IP/port/branch rules)
 
@@ -113,3 +126,5 @@ Rules:
 - No "Why it matters" here — rationale lives only in `PRD.md`.
 - The inline diff + acceptance + screenshot must be enough to implement with **no** access to the
   prototype repo; the git refs are a convenience for those who have access.
+- This per-section block is exactly what the Lark publish step embeds (as a **code block**) under
+  the matching PRD section — keep it self-contained and copy-pasteable.

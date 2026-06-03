@@ -5,6 +5,11 @@
 **Skill name:** `prototype-to-prd`
 **Type:** Personal Claude Code skill (`~/.claude/skills/prototype-to-prd/`)
 
+> **Refined by** [`2026-06-03-multi-tool-install-and-prd-lark-merge-design.md`](2026-06-03-multi-tool-install-and-prd-lark-merge-design.md):
+> the `PRD.md`/`IMPLEMENTATION.md` split is retained **locally** (separate files), but the two are
+> **merged per section in the published Lark Docx** (the prompt as a copyable code block under each
+> section). The local `PRD.md` is human-only.
+
 ---
 
 ## Purpose

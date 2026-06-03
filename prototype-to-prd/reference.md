@@ -105,13 +105,19 @@ screenshots as image blocks (they already have callouts burned in — no Lark-na
 **Create:**
 1. Create a standalone Docx in the resolved folder, titled `PRD — <feature> (<date>)`.
 2. Append blocks **in `order`**, per section: heading → image block (uploaded screenshot) →
-   human content (what/why/acceptance) → the inline implementation prompt.
-3. Record `lark.doc_token`, `lark.url`, and `lark.block_map` (section id → list of block ids) into
-   `manifest.json`.
+   human content (what/why/acceptance, from `PRD.md`) → **the section's full implementation prompt
+   from `IMPLEMENTATION.md`, rendered as a code block** (so the developer copies it straight from the
+   section). The prompt goes **under the same section heading** — this is the PRD↔IMPLEMENTATION
+   merge, and it happens **only** in the Lark doc; the local `PRD.md`/`IMPLEMENTATION.md` stay
+   separate.
+3. Record `lark.doc_token`, `lark.url`, and `lark.block_map` (section id → list of block ids,
+   **including the prompt code block**) into `manifest.json`.
 
 **Update (manifest exists):**
 1. For each changed section, use `block_map` to target its blocks: replace text, swap the image
-   block's media, and insert/delete/move blocks for added/removed/reordered sections.
+   block's media, **refresh the implementation-prompt code block**, and insert/delete/move blocks for
+   added/removed/reordered sections. (Each section's blocks include its prompt code block, so the
+   merge is preserved on every update.)
 2. Refresh `block_map`; keep the same `doc_token` and URL.
 3. **Reliability fallback:** if per-block image surgery proves flaky, rebuild the whole doc body
    under the same `doc_token` (clear + re-append) so the **URL stays stable**.

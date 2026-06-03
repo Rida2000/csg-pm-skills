@@ -9,12 +9,14 @@ description: Use when a PM or designer has finished prototype changes (on a bran
 
 Turn a designer's quick-and-dirty prototype into a **developer-ready handoff PRD**: gather the
 code changes + design intent, drive a browser to capture **annotated screenshots** of the
-affected screens, and assemble a **step-by-step PRD** that contains both human-facing content
-(what / why / acceptance) and **portable, per-section implementation prompts** for a developer
-or another AI agent to reproduce the work production-quality.
+affected screens, and assemble a **step-by-step handoff** — human-facing content (what / why /
+acceptance) plus **portable, per-section implementation prompts** for a developer or another AI
+agent to reproduce the work production-quality.
 
 Output is a **local Markdown bundle** (the source artifact) **and** a published **standalone Lark
-Docx** (the shareable snapshot). Re-running **updates** the existing PRD in place — it never
+Docx** (the shareable snapshot). Locally the bundle keeps `PRD.md` (human) and `IMPLEMENTATION.md`
+(per-section prompts) as **separate files**; the **Lark Docx merges them per section**, embedding
+each prompt as a copyable code block. Re-running **updates** the existing PRD in place — it never
 silently regenerates a fresh one.
 
 **Core dataflow:** one sequential analysis phase produces a *manifest*; then PRD prose and
@@ -41,9 +43,13 @@ These are exactly the things an unguided agent skips. Do not skip them:
 1. **Annotated screenshots are mandatory.** A text-only PRD is a failure. Every visible change gets
    a screenshot with the changed element outlined and a numbered callout. Non-visual changes use
    `framing: none` (and say so) — but you must still *decide* visibility per change.
-2. **Split human content from implementation prompts.** `PRD.md` is for humans (what/why/
-   acceptance). The per-section implementation prompt is a **copy-pasteable block** a developer or
-   AI agent can run as-is. Don't blend them into prose.
+2. **Keep `PRD.md` and `IMPLEMENTATION.md` separate locally; merge them in the Lark doc.** On disk
+   they stay two files: `PRD.md` is human-only (what/why/acceptance), `IMPLEMENTATION.md` holds the
+   per-section copy-pasteable prompts. When you **publish to Lark**, merge them — under each section,
+   right after the human content, place that section's implementation prompt as a **code block**
+   (copyable, run-as-is). Never blend prompt and prose into one paragraph, and never leave a Lark
+   section merely *linking to* or paraphrasing the prompt — the copyable block must be present
+   in-section.
 3. **Order sections by implementation dependency** (`order` + `depends_on`) so the handoff reads as
    a build sequence — foundational pieces (shared component/util/type) before the screens that use
    them. Group by *both* design cohesion and implementation cohesion, not by file.
@@ -67,7 +73,7 @@ PHASE 1  gather + analyze → manifest.json        ⏸ CHECKPOINT A
 PHASE 2  ║ Track P (main agent): prose + impl prompts
          ║ Track S (subagent):   screenshots + callouts → {screenshots[], misses[]}
          ╚ join                                   ⏸ CHECKPOINT B
-PHASE 3  assemble local bundle → publish/update Lark Docx → return link
+PHASE 3  assemble local bundle → publish/update Lark Docx (merge PRD+IMPL per section) → return link
 ```
 
 ### Phase 0 — resolve config, scope, preconditions
@@ -107,9 +113,10 @@ Resolve, never hardcode (see Non-negotiable #6):
 
 ### Phase 2 — two parallel tracks (dispatch Track S; keep Track P in the main agent)
 
-- **Track P (main agent):** for each section *in `order`*, write the `PRD.md` section (what/why/
-  acceptance) and its inline `IMPLEMENTATION.md` block. References screenshots by their
-  pre-assigned filename + callout number — the image need not exist yet.
+- **Track P (main agent):** for each section *in `order`*, write the `PRD.md` section (human-only:
+  what/why/acceptance) **and** its `IMPLEMENTATION.md` block (the copy-pasteable prompt). Keep them as
+  the two separate files — the PRD↔IMPL merge happens at Lark-publish time (Phase 3). References
+  screenshots by their pre-assigned filename + callout number — the image need not exist yet.
 - **Track S (dispatched subagent):** captures + annotates screenshots and returns
   `{screenshots[], misses[]}`. Dispatch per `superpowers:dispatching-parallel-agents`. Exact
   per-mark loop, framing→screenshot mapping, the `before-after` worktree recipe (uses
@@ -129,8 +136,9 @@ never loses work.
 1. Write `prd/<date>-<feature>/{manifest.json, PRD.md, IMPLEMENTATION.md, screenshots/}`.
 2. Publish/update the standalone Lark Docx via `lark-doc` (block-by-block steps in `reference.md`):
    - **Create:** new Docx in the resolved folder; append blocks in `order` (heading → screenshot
-     image block → human content → inline implementation prompt). Record `lark.doc_token`, `url`,
-     and `block_map` (section → block IDs) into the manifest.
+     image block → human content → the implementation prompt as a copyable **code block** under the
+     section — the PRD↔IMPL merge). Record `lark.doc_token`, `url`, and `block_map` (section → block
+     IDs) into the manifest.
    - **Update:** apply **targeted block ops** to the *same* doc via `block_map` (replace text, swap
      image media, insert/delete/move blocks for added/removed/reordered sections); refresh
      `block_map`; keep the same URL. **Fallback** if per-block image surgery is flaky: rebuild the
@@ -153,7 +161,8 @@ never loses work.
 | Mistake | Fix |
 |---|---|
 | Shipping a text-only PRD (no images) | Annotated screenshots are mandatory (Non-negotiable #1). |
-| One blended doc | Split `PRD.md` (human) from per-section prompts in `IMPLEMENTATION.md` (#2). |
+| Local `PRD.md` carries the full prompt, or one blended doc | Keep `PRD.md` human-only and `IMPLEMENTATION.md` separate locally (#2). |
+| Lark section only *links to* / paraphrases the prompt | Embed the section's full prompt as a copyable **code block** under that section in the Lark doc (#2). |
 | Sections grouped by file, or unordered | Cluster by design+implementation cohesion; order by `depends_on` (#3). |
 | Leaking SSH/IP/port/`*-prototype` rules into the dev prompt | `IMPLEMENTATION.md` is environment-agnostic (#5). |
 | Hardcoding `192.168.x.x:3100` in the skill's commands | Resolve `PREVIEW_BASE` at runtime (#6). |
@@ -167,4 +176,5 @@ never loses work.
 - About to paste the preview URL / SSH host / port into `IMPLEMENTATION.md` → STOP, that's not portable.
 - About to `git checkout <base>` on the shared remote checkout → STOP, use a worktree.
 - About to create a second Lark doc when one already exists → STOP, update in place.
+- About to publish a Lark section whose implementation prompt is missing or just a link/paraphrase → STOP, embed the full prompt as a code block under that section.
 - Skipping `manifest.json` "because it's a one-off" → STOP, it's the update contract.
