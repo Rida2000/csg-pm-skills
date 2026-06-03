@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Node / tooling (in case skill scripts grow deps)
+node_modules/
+*.log
+
+# Generated PRD bundles (skill output — not part of the skill itself)
+prd/
+
+# Local scratch
+.tmp/
