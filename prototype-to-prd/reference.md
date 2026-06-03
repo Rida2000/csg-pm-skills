@@ -105,11 +105,12 @@ screenshots as image blocks (they already have callouts burned in — no Lark-na
 **Create:**
 1. Create a standalone Docx in the resolved folder, titled `PRD — <feature> (<date>)`.
 2. Append blocks **in `order`**, per section: heading → image block (uploaded screenshot) →
-   human content (what/why/acceptance, from `PRD.md`) → **the section's full implementation prompt
-   from `IMPLEMENTATION.md`, rendered as a code block** (so the developer copies it straight from the
-   section). The prompt goes **under the same section heading** — this is the PRD↔IMPLEMENTATION
-   merge, and it happens **only** in the Lark doc; the local `PRD.md`/`IMPLEMENTATION.md` stay
-   separate.
+   human content (what/why/acceptance, from `PRD.md`) → **the section's _entire_ implementation
+   prompt from `IMPLEMENTATION.md` as a single code block** — Goal, code refs, diff, acceptance, and
+   verify all in **one** block, **not just the diff** — so the developer copies the whole prompt in
+   one action. The prompt goes **under the same section heading**; this is the PRD↔IMPLEMENTATION
+   merge, and it happens **only** in the Lark doc (the local `PRD.md`/`IMPLEMENTATION.md` stay
+   separate).
 3. Record `lark.doc_token`, `lark.url`, and `lark.block_map` (section id → list of block ids,
    **including the prompt code block**) into `manifest.json`.
 

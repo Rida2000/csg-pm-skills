@@ -198,7 +198,10 @@ section places its implementation prompt **under that same section**, rendered a
 (copyable). Bundle stays `{manifest.json, PRD.md, IMPLEMENTATION.md, screenshots/}`.
 
 ### B1. `templates.md`
-- **Keep** the `IMPLEMENTATION.md` skeleton as-is (per-section, environment-agnostic).
+- **`IMPLEMENTATION.md` template:** each section's prompt is **one code block** (Goal → code refs →
+  diff → acceptance → verify, with the diff as plain text **inside** the block — no nested fence),
+  kept per-section and environment-agnostic. This makes the Lark merge drop the **entire** prompt in
+  as a single copyable code block (not just the diff).
 - **`PRD.md` template:** make sections **human-only**. Replace the current
   `── Implementation prompt ── <the C1 block from IMPLEMENTATION.md, inline …>` lines with a
   one-line **pointer**, e.g. `_Implementation prompt → `IMPLEMENTATION.md` §C1 (merged into the Lark
@@ -216,9 +219,9 @@ section places its implementation prompt **under that same section**, rendered a
 
 ### B2. `reference.md` — Lark publishing
 - **Create:** per section, append blocks **in `order`**: heading → image block (screenshot) → human
-  content (what/why/acceptance, from `PRD.md`) → **the full prompt for that section from
-  `IMPLEMENTATION.md`, as a code block** (so it is copyable in Lark), placed **under the same
-  section heading**.
+  content (what/why/acceptance, from `PRD.md`) → **the section's _entire_ prompt from
+  `IMPLEMENTATION.md` as a single code block** (Goal → verify, **not just the diff**; copyable in
+  Lark), placed **under the same section heading**.
 - **Update:** same merge rule when refreshing a section's blocks; the implementation-prompt code
   block is part of each section's `block_map` entry so targeted updates replace it in place.
 

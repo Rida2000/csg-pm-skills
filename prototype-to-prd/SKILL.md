@@ -46,8 +46,9 @@ These are exactly the things an unguided agent skips. Do not skip them:
 2. **Keep `PRD.md` and `IMPLEMENTATION.md` separate locally; merge them in the Lark doc.** On disk
    they stay two files: `PRD.md` is human-only (what/why/acceptance), `IMPLEMENTATION.md` holds the
    per-section copy-pasteable prompts. When you **publish to Lark**, merge them — under each section,
-   right after the human content, place that section's implementation prompt as a **code block**
-   (copyable, run-as-is). Never blend prompt and prose into one paragraph, and never leave a Lark
+   right after the human content, place that section's **entire** implementation prompt (Goal →
+   verify, **not just the diff**) as a **single code block** (copyable, run-as-is). Never blend
+   prompt and prose into one paragraph, and never leave a Lark
    section merely *linking to* or paraphrasing the prompt — the copyable block must be present
    in-section.
 3. **Order sections by implementation dependency** (`order` + `depends_on`) so the handoff reads as
@@ -136,8 +137,9 @@ never loses work.
 1. Write `prd/<date>-<feature>/{manifest.json, PRD.md, IMPLEMENTATION.md, screenshots/}`.
 2. Publish/update the standalone Lark Docx via `lark-doc` (block-by-block steps in `reference.md`):
    - **Create:** new Docx in the resolved folder; append blocks in `order` (heading → screenshot
-     image block → human content → the implementation prompt as a copyable **code block** under the
-     section — the PRD↔IMPL merge). Record `lark.doc_token`, `url`, and `block_map` (section → block
+     image block → human content → the **entire** implementation prompt as one copyable **code
+     block** under the section, not just the diff — the PRD↔IMPL merge). Record `lark.doc_token`,
+     `url`, and `block_map` (section → block
      IDs) into the manifest.
    - **Update:** apply **targeted block ops** to the *same* doc via `block_map` (replace text, swap
      image media, insert/delete/move blocks for added/removed/reordered sections); refresh

@@ -4,8 +4,8 @@ Use these verbatim. Do not invent a different layout — the structure is load-b
 is the parallel-track contract + update state). Locally the bundle keeps **two separate files**:
 `PRD.md` (human-facing) and `IMPLEMENTATION.md` (the per-section, environment-agnostic
 implementation prompts). They stay separate on disk; the published **Lark Docx merges them per
-section** (see `reference.md`), placing each section's prompt as a **copyable code block** under that
-section's heading.
+section** (see `reference.md`), placing each section's **entire** prompt as a single copyable code
+block under that section's heading.
 
 ## `manifest.json`
 
@@ -99,32 +99,37 @@ _Implementation prompt → `IMPLEMENTATION.md` §C1 (merged into the Lark doc un
 
 ## `IMPLEMENTATION.md` (per-section, ordered; **environment-agnostic** — no SSH/IP/port/branch rules)
 
-```markdown
+Each section's prompt is **one code block** — Goal, code refs, diff, acceptance, and verify all
+inside a single fence, with the diff as plain text **inside** it (not its own nested fence). The
+Lark publish step drops this whole block in as a single copyable code block under the section, so a
+dev copies the entire prompt in one action.
+
+````markdown
 ## C1 — <title>            [implement first · no deps]
 
-**Goal:** <what to build, behavior-level>
+```text
+Goal: <what to build, behavior-level>
 
-**Exact prototype code (reuse as-is if convenient):**
-- Prototype branch `<branch>` @ `<sha>`  (repo: <origin url>)
-- Files: `<files>`
-- If you have repo access: `git show <sha>:<file>`
+Exact prototype code (reuse as-is if convenient):
+- Prototype branch <branch> @ <sha>   (repo: <origin url>)
+- Files: <files>
+- With repo access: git show <sha>:<file>
 
-**Reference diff (reproduce the behavior in your project's conventions, or lift the code above):**
-\`\`\`diff
+Reference diff (reproduce in your project's conventions, or lift the code above):
 <fork-point diff scoped to this section's files>
-\`\`\`
-<!-- standalone mode: paste the prototype files themselves instead of a diff -->
+(standalone mode: paste the prototype files themselves instead of a diff)
 
-**Acceptance criteria (Definition of Done):**
-- [ ] …
+Acceptance criteria (Definition of Done):
+- [ ] <criterion>
 
-**Verify:** in your dev environment, open the <screen> and match it against
-screenshots/C1-*.png (callout ①).
+Verify: open <screen> and match it against screenshots/C1-*.png (callout ①).
 ```
+````
 
 Rules:
 - No "Why it matters" here — rationale lives only in `PRD.md`.
-- The inline diff + acceptance + screenshot must be enough to implement with **no** access to the
+- The diff + acceptance + screenshot reference must be enough to implement with **no** access to the
   prototype repo; the git refs are a convenience for those who have access.
-- This per-section block is exactly what the Lark publish step embeds (as a **code block**) under
-  the matching PRD section — keep it self-contained and copy-pasteable.
+- **One code block per section, no nested fences.** Everything from Goal to Verify lives in that
+  single block (the diff is plain text inside it). The Lark publish step embeds the **entire** block
+  as one code block under the matching PRD section — never just the diff.
