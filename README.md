@@ -80,9 +80,58 @@ git clone https://github.com/Rida2000/csg-pm-skills.git && cd csg-pm-skills
 | OpenCode | `~/.config/opencode/skills/<name>/` | `<dir>/.opencode/skills/<name>/` |
 | Cursor | — (no per-skill global location) | `<dir>/.cursor/{rules,commands,skills}/<name>` |
 
-Then invoke a skill from your tool — these skills are **explicit-invoke** only. `prototype-to-prd`
-expects a running dev preview and, for the Lark publish step, the `lark-doc` skill and
-`playwright-cli`.
+### Per-platform install & upgrade
+
+Pick a scope once: **global** (default — available in every project for that tool) or
+**`--project[=DIR]`** (scoped to one repo; required for Cursor). All commands below assume you've
+cloned the repo and are in it (`git clone https://github.com/Rida2000/csg-pm-skills.git && cd
+csg-pm-skills`); each maps 1:1 onto the `curl … | bash -s -- …` form if you prefer not to clone.
+
+#### Claude Code
+- **Install (global):** `./install.sh --tools claude` → `~/.claude/skills/<name>/`
+- **Install (one repo):** `./install.sh --tools claude --project .` → `<repo>/.claude/skills/<name>/`
+- **Use:** auto-discovered. These skills are explicit-invoke — just ask Claude (e.g. *"turn this
+  prototype into a PRD"*) and it loads the skill.
+- **Upgrade:** symlinked from a clone → `git pull` and it's already live. Copied (or installed via
+  `curl`) → re-run the same install command.
+
+#### Codex
+- **Install (global):** `./install.sh --tools codex` → `~/.agents/skills/<name>/`
+- **Install (one repo):** `./install.sh --tools codex --project .` → `<repo>/.agents/skills/<name>/`
+  (Codex scans `.agents/skills` from the working dir up to the repo root.)
+- **Use:** run `/skills`, or type `$` to mention a skill by name.
+- **Upgrade:** `git pull` for symlinks; re-run the install command for copies.
+
+#### OpenCode
+- **Install (global):** `./install.sh --tools opencode` → `~/.config/opencode/skills/<name>/`
+- **Install (one repo):** `./install.sh --tools opencode --project .` →
+  `<repo>/.opencode/skills/<name>/`. (OpenCode also reads `.claude/skills` and `.agents/skills`, so a
+  Claude or Codex project install is picked up automatically too.)
+- **Use:** auto-discovered; mention the skill by name.
+- **Upgrade:** `git pull` for symlinks; re-run the install command for copies.
+
+#### Cursor — project scope only
+- **Install:** `./install.sh --tools cursor --project .` — generates, in the repo:
+  - `.cursor/rules/<name>.mdc` — an *agent-requested* rule (Cursor loads it on demand by its
+    description, the closest thing to skill auto-invocation)
+  - `.cursor/commands/<name>.md` — invoke explicitly as `/<name>`
+  - `.cursor/skills/<name>/` — the skill's support files (`templates.md`, `reference.md`, scripts)
+- **Use:** ask Cursor's agent for the task (the rule loads itself), or type `/<name>`.
+- **Upgrade:** **re-run** `./install.sh <name> --tools cursor --project .`. The `.mdc` and command are
+  *generated* files, so they don't refresh on `git pull` alone (the bundled `.cursor/skills/<name>/`
+  does, if it was symlinked). Cursor has no per-skill global location, so there's no global install.
+
+#### Upgrade / remove — quick reference
+- **From a clone:** `cd csg-pm-skills && git pull && ./install.sh <the flags you used>`. Symlinked
+  Claude/Codex/OpenCode installs are already current; re-running also regenerates Cursor rules and
+  refreshes any copy installs.
+- **Via curl:** re-run the same `curl … | bash` line — it refreshes the cached clone and re-copies.
+- **Remove:** add `--uninstall` with the same selectors, e.g. `./install.sh --uninstall --tools
+  claude`, or `./install.sh prototype-to-prd --uninstall --tools cursor --project .`. Use `--dry-run`
+  first to preview.
+
+> These skills are **explicit-invoke** (they don't auto-fire). `prototype-to-prd` also needs a
+> running dev preview and, for the Lark publish step, the `lark-doc` skill and `playwright-cli`.
 
 ## Conventions
 
