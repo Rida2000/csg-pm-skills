@@ -53,8 +53,8 @@ These are exactly the things an unguided agent skips. Do not skip them:
    per-section copy-pasteable prompts. When you **publish to Lark**, merge them — under each section,
    right after the human content, place that section's **entire** implementation prompt (Goal →
    verify, **not just the diff**) as a **single code block**, immediately followed by an
-   **auto-generated disclaimer** callout (the prompt is a starting point, not verified code — the dev
-   must review it before use). Render each mark's legend as the **image caption**, never as a
+   **auto-generated disclaimer** callout — **one short line** (e.g. "⚠️ Auto-generated — review and
+   adapt before use."), not a paragraph. Render each mark's legend as the **image caption**, never as a
    duplicate text line. Never blend prompt and prose into one paragraph, and never leave a Lark
    section merely *linking to* or paraphrasing the prompt — the copyable block must be present
    in-section.

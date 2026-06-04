@@ -118,13 +118,11 @@ screenshots as image blocks (they already have callouts burned in — no Lark-na
      — Goal, code refs, diff, acceptance, and verify all in **one** block, **not just the diff** —
      under the same section heading. This is the PRD↔IMPLEMENTATION merge; it happens **only** in the
      Lark doc (the local `PRD.md`/`IMPLEMENTATION.md` stay separate).
-   - **an auto-generated disclaimer** immediately after the prompt — a **callout / highlight block**
-     (not part of the code block, so it can't be copied along with the prompt), reminding the
-     developer the prompt is machine-generated and must be reviewed. Match the doc's language, e.g.:
-     - ZH: *⚠️ 本实现提示由原型 diff 与设计意图自动生成，是实现起点而非经过验证的最终代码。使用前请结合本项目代码核对并按需调整，不要直接照搬运行。*
-     - EN: *⚠️ This implementation prompt was auto-generated from the prototype diff and design
-       intent — a starting point, not verified production code. Review and adapt it against your
-       codebase before using; don't run it as-is.*
+   - **an auto-generated disclaimer** immediately after the prompt — a short **callout / highlight
+     block** (not part of the code block, so it can't be copied with the prompt). Keep it to one
+     line; match the doc's language, e.g.:
+     - ZH: *⚠️ 本提示由 AI 自动生成，使用前请核对并按需调整。*
+     - EN: *⚠️ Auto-generated — review and adapt before use.*
 3. Record `lark.doc_token`, `lark.url`, and `lark.block_map` (section id → list of block ids,
    **including each image's caption, the prompt code block, and the disclaimer block**) into
    `manifest.json`.
