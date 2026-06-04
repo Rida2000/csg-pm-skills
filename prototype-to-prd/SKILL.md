@@ -40,9 +40,14 @@ a Lark doc). Do not auto-fire.
 
 These are exactly the things an unguided agent skips. Do not skip them:
 
-1. **Annotated screenshots are mandatory.** A text-only PRD is a failure. Every visible change gets
-   a screenshot with the changed element outlined and a numbered callout. Non-visual changes use
-   `framing: none` (and say so) — but you must still *decide* visibility per change.
+1. **Every section needs at least one screenshot unless the change is product-invisible.** A
+   text-only PRD is a failure. `framing: none` means the change leaves **no visible state anywhere
+   in the running product** (e.g. a build config change, a server-only migration, a CI script) — not
+   merely that the underlying code is a type rename or an i18n key. Any change that touches labels,
+   text, icons, styles, layout, or user-observable behaviour needs at least one screenshot, even if
+   the code change looks "non-visual". A section can have **multiple marks** — use as many as needed
+   to show all distinct visible effects of the change. Number callouts globally (①②③…) across all
+   marks in all sections.
 2. **Keep `PRD.md` and `IMPLEMENTATION.md` separate locally; merge them in the Lark doc.** On disk
    they stay two files: `PRD.md` is human-only (what/why/acceptance), `IMPLEMENTATION.md` holds the
    per-section copy-pasteable prompts. When you **publish to Lark**, merge them — under each section,
@@ -65,6 +70,12 @@ These are exactly the things an unguided agent skips. Do not skip them:
    `README`, or ask). The skill must work in projects other than this one.
 7. **No silent blanks or caps.** Every miss / downgrade / skipped screenshot is flagged in the PRD
    *and* surfaced to the operator.
+8. **PRD.md uses product language, not code language.** "What changed" describes what a person sees
+   or experiences — no component names, CSS classes, TypeScript types, i18n keys, API function names,
+   or file paths. Those belong in IMPLEMENTATION.md. The **"Looks right when"** section lists only
+   things verifiable by looking at or clicking the running product — no compile checks, no class name
+   assertions. Gut check: could a non-developer PM read the PRD section and understand it without
+   opening the codebase? If not, strip the technical details out.
 
 ## Phase flow
 
@@ -104,9 +115,11 @@ Resolve, never hardcode (see Non-negotiable #6):
 2. **Cluster into implementation-aware sections** (judgment — this is not scriptable). See
    Non-negotiable #3.
 3. Infer affected routes (Next.js app-router file→route + trace shared-component usage to screens).
-4. Per section assign: `order`, `depends_on`, callout number(s) `n`, `framing`, `screenshot`
-   filenames, `selector_hint`/`container_hint`, `callout` text, `why` + `why_source`,
-   `acceptance_seed`. Schema + framing rules: `templates.md`, `reference.md`.
+4. Per section assign: `order`, `depends_on`, one or more marks (each with `n`, `framing`,
+   `screenshot` filename, `selector_hint`/`container_hint`, `callout` text), `why` + `why_source`,
+   `acceptance_seed` (behavioural — what a person observes in the running product; no compile checks
+   or code assertions). `framing: none` only for product-invisible changes. Schema + framing rules:
+   `templates.md`, `reference.md`.
 5. Write `manifest.json` (draft).
 6. **⏸ Checkpoint A** — present sections + **order + dependencies** + routes + framing; the
    designer confirms/reorders and answers interview questions to fill `why` gaps. The order is the
@@ -115,7 +128,8 @@ Resolve, never hardcode (see Non-negotiable #6):
 ### Phase 2 — two parallel tracks (dispatch Track S; keep Track P in the main agent)
 
 - **Track P (main agent):** for each section *in `order`*, write the `PRD.md` section (human-only:
-  what/why/acceptance) **and** its `IMPLEMENTATION.md` block (the copy-pasteable prompt). Keep them as
+  what / why / "Looks right when") **and** its `IMPLEMENTATION.md` block (the copy-pasteable
+  prompt). PRD language is product-level — no code names, CSS, or types (see Non-negotiable #8). Keep them as
   the two separate files — the PRD↔IMPL merge happens at Lark-publish time (Phase 3). References
   screenshots by their pre-assigned filename + callout number — the image need not exist yet.
 - **Track S (dispatched subagent):** captures + annotates screenshots and returns
@@ -162,7 +176,11 @@ never loses work.
 
 | Mistake | Fix |
 |---|---|
-| Shipping a text-only PRD (no images) | Annotated screenshots are mandatory (Non-negotiable #1). |
+| Shipping a text-only PRD (no images) | Every section needs at least one screenshot unless product-invisible (#1). |
+| Marking a section `framing: none` because the code change is a type/i18n/config file | `framing: none` = no visible state anywhere in the product. If it touches a label, style, or layout, it needs a screenshot (#1). |
+| A section has only one screenshot but the change affects multiple distinct areas | Use multiple marks per section — as many as needed to show all visible effects (#1). |
+| PRD "What changed" contains component names, CSS classes, type names, or function names | PRD uses product language only; code details go in IMPLEMENTATION.md (#8). |
+| "Looks right when" lists TypeScript compile checks or CSS class values | Acceptance items must be observable by a person in the running product; technical DoD goes in IMPLEMENTATION.md (#8). |
 | Local `PRD.md` carries the full prompt, or one blended doc | Keep `PRD.md` human-only and `IMPLEMENTATION.md` separate locally (#2). |
 | Lark section only *links to* / paraphrases the prompt | Embed the section's full prompt as a copyable **code block** under that section in the Lark doc (#2). |
 | Sections grouped by file, or unordered | Cluster by design+implementation cohesion; order by `depends_on` (#3). |
@@ -175,6 +193,8 @@ never loses work.
 ## Red flags — STOP
 
 - About to write a PRD with no screenshots → STOP, run Track S.
+- About to mark a section `framing: none` because the code change is a type/i18n/config file → STOP, ask: does this change produce any visible text, icon, style, or layout in the running product? If yes, it needs a screenshot.
+- About to write a component name, CSS class, type name, or function call in `PRD.md` → STOP, that belongs in IMPLEMENTATION.md (#8).
 - About to paste the preview URL / SSH host / port into `IMPLEMENTATION.md` → STOP, that's not portable.
 - About to `git checkout <base>` on the shared remote checkout → STOP, use a worktree.
 - About to create a second Lark doc when one already exists → STOP, update in place.

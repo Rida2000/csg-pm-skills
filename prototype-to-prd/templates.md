@@ -52,6 +52,8 @@ block under that section's heading.
         }
       ],
       "acceptance_seed": ["All three options visible without opening a menu"]
+      // acceptance_seed items are BEHAVIOURAL — what a person observes in the running product.
+      // No compile checks, no class name assertions. These become the "Looks right when" list.
     }
   ]
 }
@@ -59,10 +61,21 @@ block under that section's heading.
 
 ## `PRD.md` (human-facing; sections ordered by implementation sequence)
 
-`PRD.md` is **human-only** — what / why / acceptance + screenshots. It does **not** embed the
-implementation prompt; each section ends with a one-line **pointer** to the matching
-`IMPLEMENTATION.md` block. The copy-pasteable prompt is merged in only when publishing to Lark (per
-section, as a code block — see `reference.md`).
+`PRD.md` is **human-only** — what a person sees or experiences, why the decision was made, and
+what "done" looks like from a product perspective. It does **not** embed implementation details or
+the implementation prompt; those belong in `IMPLEMENTATION.md`. The copy-pasteable prompt is merged
+in only when publishing to Lark (per section, as a code block — see `reference.md`).
+
+**Language rule:** no component names, CSS classes, TypeScript types, i18n keys, API function names,
+or file paths in `PRD.md`. If you find yourself writing a class name or function call, stop — move
+it to `IMPLEMENTATION.md`.
+
+**Screenshot rule:** every section gets at least one screenshot. A section can have multiple marks
+(①②③ globally numbered) — use as many as needed to show all distinct visible effects. Only omit
+screenshots for product-invisible changes (build config, server-only migration, CI scripts).
+
+**"Looks right when" rule:** items are observable by a person in the running product — no compile
+checks, no CSS class assertions. Could a PM read this without opening the codebase? If not, strip it.
 
 ```markdown
 # PRD — <feature>
@@ -70,27 +83,41 @@ section, as a code block — see `reference.md`).
 **Status:** Ready for dev
 
 # Summary
-- <what this change is, at a glance>
+- <what this change is, at a glance — plain product terms>
 - <the user-facing outcome / why it matters>
 - Prototyped — reproduce **production-quality** per each section's implementation prompt
   (in `IMPLEMENTATION.md`, merged under the section in the Lark doc).
 
 ---
 ## C1 — <title>            [implement first · no deps]
-![C1](screenshots/C1-settings.png)
-**Legend:** ① <callout>
 
-**What changed.** <plain language>
-**Why.** <rationale> *(source: <why_source>)*
-**Acceptance criteria**
-- [ ] …
+<!-- Even "non-visual" code changes (i18n, type scaffolding) often have a visible result.
+     Show it. framing: none only if nothing appears anywhere in the running product. -->
+![C1](screenshots/C1-sidebar.png)
+**Legend:** ① <what the callout marks, in plain words>
+
+**What changed.** <what a person sees or experiences — no code names, no CSS, no types>
+**Why.** <product rationale, one or two sentences> *(source: <why_source>)*
+**Looks right when**
+- [ ] <something verifiable by looking at or clicking the running product>
+- [ ] <another observable outcome>
 
 _Implementation prompt → `IMPLEMENTATION.md` §C1 (merged into the Lark doc under this section as a copyable code block)._
 
+---
 ## C2 — <title>            [depends on C1]
-![C2](screenshots/C2-settings.png)
-**Legend:** ② <callout>
-…
+
+<!-- Example of a section with multiple marks showing distinct areas of change. -->
+![C2-a](screenshots/C2-content.png) ![C2-b](screenshots/C2-sidebar.png)
+**Legend:** ② <callout for first mark>   ③ <callout for second mark>
+
+**What changed.** <plain product description covering both marks>
+**Why.** <rationale> *(source: <why_source>)*
+**Looks right when**
+- [ ] <observable outcome relating to first mark>
+- [ ] <observable outcome relating to second mark>
+
+_Implementation prompt → `IMPLEMENTATION.md` §C2 (merged into the Lark doc under this section as a copyable code block)._
 ```
 
 > The PRD section heading keeps the stable `C1`/`C2` id (it's the join key across the manifest,
