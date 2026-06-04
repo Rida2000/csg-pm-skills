@@ -23,6 +23,10 @@ git -C <repo> diff "$FP"..HEAD -- <files>   # scoped to one section's files
 Standalone strategies: `whole-project` (diff against the empty tree / list all files), `since-ref`
 (`git diff <ref>..HEAD`), `commit-range` (`git diff <A>..<B>`), `files` (operator-listed paths).
 
+The agent **reads** this diff in Phase 1 to understand and cluster the change into sections — but the
+implementation prompt **points** to it (`git show <sha>:<file>` / `git diff <fp>..<sha> -- <files>`)
+rather than embedding it. Don't paste full diffs into the prompt or the doc.
+
 ## Callout style (consistent across the whole PRD)
 
 - Outline: `3px dashed #e5484d` (red).

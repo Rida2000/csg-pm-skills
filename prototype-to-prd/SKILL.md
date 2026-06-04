@@ -53,8 +53,9 @@ These are exactly the things an unguided agent skips. Do not skip them:
    per-section copy-pasteable prompts. When you **publish to Lark**, merge them — under each section,
    right after the human content, place a short **auto-generated disclaimer** callout — **one line**
    (e.g. "⚠️ Auto-generated — review and adapt before use."), not a paragraph — and **then** that
-   section's **entire** implementation prompt (Goal → verify, **not just the diff**) as a **single
-   code block**. The disclaimer comes **before** the prompt so the dev reads the caveat first. Render
+   section's **entire** implementation prompt (Goal → verify — a pointer-style guide, not a code
+   dump) as a **single code block**. The disclaimer comes **before** the prompt so the dev reads the
+   caveat first. Render
    each mark's legend as the **image caption**, never as a duplicate text line. Never blend prompt and
    prose into one paragraph, and never leave a Lark section merely *linking to* or paraphrasing the
    prompt — the copyable block must be present in-section.
@@ -66,10 +67,12 @@ These are exactly the things an unguided agent skips. Do not skip them:
    a `[build: …]` hint. Group by design + implementation cohesion, not by file.
 4. **Always write `manifest.json`.** It is persistent state; without it the PRD can't be updated in
    place and you'll be forced to regenerate.
-5. **`IMPLEMENTATION.md` must be environment-agnostic.** The developer is on an unknown machine,
-   port, and workflow. NEVER put the prototyping environment's SSH host, IP, port, `frontend/`-only
-   rule, or `*-prototype` branch rules into it. Portable references only: git refs + the embedded
-   diff (which alone is enough to implement with no repo access).
+5. **`IMPLEMENTATION.md` points to the source — it is not a code dump.** The prompt is a guide: it
+   leads with intent + the design decisions to preserve, then **points** to the reference
+   implementation (branch@sha + files + `git show` / `git diff` commands) and inlines only short,
+   decision-critical snippets — **never whole files or full diffs** (assumes the implementer can reach
+   the prototype repo). Stay **environment-agnostic**: git refs + origin url only — NEVER the
+   prototyping SSH host, IP, port, `frontend/`-only rule, or `*-prototype` branch workflow.
 6. **Never hardcode environment specifics in the skill's own commands.** Resolve `PREVIEW_BASE`,
    repo/branch, base ref, and the Lark target folder at runtime (read the project's `CLAUDE.md`/
    `README`, or ask). The skill must work in projects other than this one.

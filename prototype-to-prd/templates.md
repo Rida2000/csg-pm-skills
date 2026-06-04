@@ -198,27 +198,33 @@ _→ `IMPLEMENTATION.md` §C2 (merged into the Lark doc here as a code block, pr
 ## `IMPLEMENTATION.md` (per-section, **build order** = `impl_order`; **environment-agnostic**)
 
 Ordered by `impl_order` (dependencies first), so a developer reads top-to-bottom. Same sections as
-the PRD (same `C`-ids), resequenced. Each section's prompt is **one code block** — Goal, code refs,
-diff, acceptance, and verify all inside a single fence, with the diff as plain text **inside** it
-(not its own nested fence). The Lark publish step drops this whole block in as a single copyable code
-block under the matching (narrative-ordered) PRD section.
+the PRD (same `C`-ids), resequenced. The prompt is a **guide, not a code dump**: it leads with
+**intent + the design decisions to preserve**, **points** to the exact reference implementation
+(branch@sha + files + the git commands to read it), and inlines **only short, decision-critical
+snippets** — never whole files or full diffs. Each section's prompt is **one code block** (no nested
+fences); the Lark publish step drops this whole block in under the matching (narrative-ordered) PRD
+section.
 
 ````markdown
 ## C2 — <the dialog>            [build: first · no deps]
 
 ```text
-Goal: <what to build, behavior-level>
+Goal: <what to build, behavior-level — the intent>
 
-Exact prototype code (reuse as-is if convenient):
+Design decisions to preserve (the non-obvious calls the code alone won't tell you):
+- <e.g. neutral-grey active state — brand green was deliberately removed; permanent, not a shortcut>
+- <e.g. redeeming is irreversible → confirm before applying>
+
+Where the reference implementation is (read / lift from here):
 - Prototype branch <branch> @ <sha>   (repo: <origin url>)
 - Files: <files>
-- With repo access: git show <sha>:<file>
+- Read it:  git show <sha>:<file>
+            git diff <fork-point>..<sha> -- <files>
 
-Reference diff (reproduce in your project's conventions, or lift the code above):
-<fork-point diff scoped to this section's files>
-(standalone mode: paste the prototype files themselves instead of a diff)
+Key snippets (only the small, must-match bits — NOT whole files):
+- <exact value/selector/line to match, e.g. active background → bg-neutral-200 (was the green token)>
 
-Acceptance criteria (Definition of Done):
+Acceptance (Definition of Done):
 - [ ] <criterion>
 
 Verify: open <screen> and match it against screenshots/C2-*.png (callout ②).
@@ -226,9 +232,14 @@ Verify: open <screen> and match it against screenshots/C2-*.png (callout ②).
 ````
 
 Rules:
-- No "Why it matters" here — rationale lives only in `PRD.md`.
-- The diff + acceptance + screenshot reference must be enough to implement with **no** access to the
-  prototype repo; the git refs are a convenience for those who have access.
+- **Point, don't dump.** Reference the source via branch@sha + the `git show` / `git diff` commands;
+  inline only short, decision-critical snippets. No full files, no full diffs. (Assumes the
+  implementer can reach the prototype repo.)
+- **Capture the intent and the decisions to preserve** — the deliberate choices, gotchas, and
+  "this is permanent, not a prototype shortcut" notes the diff can't convey. (The PRD's "Why" is the
+  *product* rationale for humans; here it's the *build-critical* intent for the implementer.)
+- **Environment-agnostic:** git refs + origin url only — never the prototyping SSH host, IP, port,
+  `frontend/`-only rule, or `*-prototype` branch workflow.
 - **One code block per section, no nested fences.** Everything from Goal to Verify lives in that
-  single block (the diff is plain text inside it). The Lark publish step embeds the **entire** block
-  as one code block under the matching PRD section — never just the diff.
+  single block; the Lark publish step embeds the **entire** block as one code block under the
+  matching PRD section.
