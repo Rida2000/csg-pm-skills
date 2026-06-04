@@ -58,9 +58,12 @@ These are exactly the things an unguided agent skips. Do not skip them:
    each mark's legend as the **image caption**, never as a duplicate text line. Never blend prompt and
    prose into one paragraph, and never leave a Lark section merely *linking to* or paraphrasing the
    prompt — the copyable block must be present in-section.
-3. **Order sections by implementation dependency** (`order` + `depends_on`) so the handoff reads as
-   a build sequence — foundational pieces (shared component/util/type) before the screens that use
-   them. Group by *both* design cohesion and implementation cohesion, not by file.
+3. **Two orders, decoupled (`prd_order` + `impl_order`).** `PRD.md` and the Lark doc read in
+   **`prd_order`** — the PM/narrative sequence: the containing screen/flow first, then the
+   dialogs/popups *inside* it, then shell/wordmark (how a designer reviews the work — a page, then the
+   dialog it opens). `IMPLEMENTATION.md` reads in **`impl_order`** — build order, dependencies first
+   (respects `depends_on`). Same sections (same `C`-ids) in both, resequenced; each PRD heading shows
+   a `[build: …]` hint. Group by design + implementation cohesion, not by file.
 4. **Always write `manifest.json`.** It is persistent state; without it the PRD can't be updated in
    place and you'll be forced to regenerate.
 5. **`IMPLEMENTATION.md` must be environment-agnostic.** The developer is on an unknown machine,
@@ -78,6 +81,13 @@ These are exactly the things an unguided agent skips. Do not skip them:
    things verifiable by looking at or clicking the running product — no compile checks, no class name
    assertions. Gut check: could a non-developer PM read the PRD section and understand it without
    opening the codebase? If not, strip the technical details out.
+9. **One standard format, default English.** Both `PRD.md` and the Lark doc follow the canonical
+   structure (templates.md): a single **H1** title + a **metadata line** (Branch / Base / Designer /
+   Date / Status — always present, including in the Lark doc), a `## Summary`, then each feature as an
+   **H2** with four **H3** sub-sections — What changed / Why / Looks right when / **Implementation
+   prompt** — never `**bold**:` labels mashed into one paragraph. Doc language is resolved in Phase 0
+   and **defaults to English**; use the glossary's **idiomatic** labels, never a literal translation
+   (e.g. `验收要点`, never `看起来正确当`).
 
 ## Phase flow
 
@@ -106,9 +116,13 @@ Resolve, never hardcode (see Non-negotiable #6):
 - **Create vs update:** look for an existing `manifest.json` for this feature. Found → **update
   mode** (see Phase 3). If a PRD exists only as a hand-made Lark doc (no manifest), **backfill** a
   manifest by reading the doc's block structure via `lark-doc`, then proceed in update mode.
+- **Doc language:** resolve `doc_language` — **default English**; operator may request Chinese/other.
 - **Preconditions (fail fast, before expensive work):** preview reachable at `PREVIEW_BASE` and
   showing the prototype state; `playwright-cli` browser open (load saved auth/storage-state for
-  authenticated screens, or have the operator log in first); `lark-doc` available; scope diff
+  authenticated screens, or have the operator log in first); **the publisher resolved AND
+  authenticated** — the `lark-doc` skill (beware a broken symlink whose `~/.agents/skills/` target is
+  gone) **or** `lark-cli auth status` = ready; if not ready, **STOP and give the operator the fix
+  (reference.md) before capturing** — a late auth failure wastes the whole capture pass; scope diff
   non-empty (else abort: "no changes vs `<base>`").
 
 ### Phase 1 — gather & analyze → manifest
@@ -117,29 +131,31 @@ Resolve, never hardcode (see Non-negotiable #6):
 2. **Cluster into implementation-aware sections** (judgment — this is not scriptable). See
    Non-negotiable #3.
 3. Infer affected routes (Next.js app-router file→route + trace shared-component usage to screens).
-4. Per section assign: `order`, `depends_on`, one or more marks (each with `n`, `framing`,
-   `screenshot` filename, `selector_hint`/`container_hint`, `callout` text), `why` + `why_source`,
-   `acceptance_seed` (behavioural — what a person observes in the running product; no compile checks
-   or code assertions). `framing: none` only for product-invisible changes. Schema + framing rules:
-   `templates.md`, `reference.md`.
+4. Per section assign: `prd_order` (narrative) + `impl_order` (build) + `depends_on`, one or more
+   marks (each with `n`, `framing`, `screenshot` filename, `selector_hint`/`container_hint`, `callout`
+   text), `why` + `why_source`, `acceptance_seed` (behavioural — what a person observes in the running
+   product; no compile checks or code assertions). `framing: none` only for product-invisible changes.
+   Schema + framing rules: `templates.md`, `reference.md`.
 5. Write `manifest.json` (draft).
-6. **⏸ Checkpoint A** — present sections + **order + dependencies** + routes + framing; the
-   designer confirms/reorders and answers interview questions to fill `why` gaps. The order is the
-   developer's roadmap, so confirm it here.
+6. **⏸ Checkpoint A** — present sections + **both orders (`prd_order` narrative / `impl_order` build)
+   + dependencies** + routes + framing; the designer confirms/reorders and answers interview questions
+   to fill `why` gaps. The narrative order is what they'll read, so confirm it here.
 
 ### Phase 2 — two parallel tracks (dispatch Track S; keep Track P in the main agent)
 
-- **Track P (main agent):** for each section *in `order`*, write the `PRD.md` section (human-only:
-  what / why / "Looks right when") **and** its `IMPLEMENTATION.md` block (the copy-pasteable
-  prompt). PRD language is product-level — no code names, CSS, or types (see Non-negotiable #8). Keep them as
+- **Track P (main agent):** write the `PRD.md` sections **in `prd_order`** (human-only; four H3
+  sub-sections — What changed / Why / Looks right when / Implementation-prompt pointer) **and** the
+  `IMPLEMENTATION.md` blocks **in `impl_order`** (the copy-pasteable prompts). PRD language is
+  product-level — no code names, CSS, or types (#8); follow the canonical format (#9). Keep them as
   the two separate files — the PRD↔IMPL merge happens at Lark-publish time (Phase 3). References
   screenshots by their pre-assigned filename + callout number — the image need not exist yet.
 - **Track S (dispatched subagent):** captures + annotates screenshots and returns
   `{screenshots[], misses[]}`. Dispatch per `superpowers:dispatching-parallel-agents`. Exact
   per-mark loop, framing→screenshot mapping, the `before-after` worktree recipe (uses
   `superpowers:using-git-worktrees`), and the callout-injection contract are in `reference.md`.
-  A subagent **cannot** ask the operator anything — it does best-effort auto-callouts and returns
-  misses; it never guesses an element and never ships a blank.
+  Callouts draw **in-page via `page.evaluate`** — a `run-code --filename` script runs Node-side and
+  silently no-ops (the `found: undefined` bug). A subagent **cannot** ask the operator anything — it
+  does best-effort auto-callouts and returns misses; it never guesses an element and never ships a blank.
 - **⏸ Checkpoint B (join, main agent):** for each Track-S miss, open `playwright-cli show --annotate`
   on that route; the operator draws the box + types a note; save the annotated image as the
   section's screenshot and fold the note in. If the operator is offline, keep the placeholder with
@@ -150,18 +166,18 @@ Resolve, never hardcode (see Non-negotiable #6):
 **Bundle-first ordering** — write the local bundle *before* any Lark write, so an external failure
 never loses work.
 
-1. Write `prd/<date>-<feature>/{manifest.json, PRD.md, IMPLEMENTATION.md, screenshots/}`.
-2. Publish/update the standalone Lark Docx via `lark-doc` (block-by-block steps in `reference.md`):
-   - **Create:** new Docx in the resolved folder; append blocks in `order` (heading → one image
-     block per mark, legend as the **image caption** not a separate text line → human content → a
-     short **auto-generated disclaimer** callout reminding the dev to review the prompt → the
-     **entire** implementation prompt as one copyable **code block** under the section, not just the
-     diff — the PRD↔IMPL merge). Record `lark.doc_token`, `url`, and `block_map` (section → block IDs)
-     into the manifest. Caption + disclaimer rules: `reference.md`.
-   - **Update:** apply **targeted block ops** to the *same* doc via `block_map` (replace text, swap
-     image media, insert/delete/move blocks for added/removed/reordered sections); refresh
-     `block_map`; keep the same URL. **Fallback** if per-block image surgery is flaky: rebuild the
-     doc body wholesale under the same `doc_token` so the **URL stays stable**.
+1. Write `prd/<date>-<feature>/{manifest.json, PRD.md, IMPLEMENTATION.md, feishu-doc.md, screenshots/}`
+   — `feishu-doc.md` is the assembled Lark source (canonical format, in `doc_language`).
+2. Publish/update the standalone Lark/Feishu Docx (auth was prechecked in Phase 0). Follow the
+   **canonical format** — one H1 + metadata line, `## Summary`, H2 per feature with four H3
+   sub-sections, legend-as-**caption**, the ⚠ disclaimer **before** the prompt code block, idiomatic
+   `doc_language` labels. Full commands (`lark-cli docs +create --markdown @feishu-doc.md` — **v1**,
+   not v2 `--content` — plus `docs +media-insert`) are in `reference.md`.
+   - **Create:** create from `feishu-doc.md`; insert each screenshot under its `## C<n>` heading with
+     the legend as the **caption**; record `doc_token` / `url` / `doc_language` / `source_markdown`
+     into the manifest.
+   - **Update:** recreate from the saved `source_markdown` in place (`docs +update --markdown` → same
+     URL) and re-insert images; `block_map` stays `{}` for markdown-import publishes.
 3. Return the **Lark URL + local bundle path**.
 4. Teardown: remove the worktree + base preview if `before-after` created them (always, even on
    error).
@@ -188,7 +204,12 @@ never loses work.
 | Lark section only *links to* / paraphrases the prompt | Embed the section's full prompt as a copyable **code block** under that section in the Lark doc (#2). |
 | Legend appears twice in Lark (image caption + a text line) | Put the legend in the image caption only; drop the `Legend:` paragraph when publishing (reference.md). |
 | Lark prompt reads like final, ready-to-paste code with no caveat | Add the auto-generated "review before use" disclaimer callout before each prompt (#2, reference.md). |
-| Sections grouped by file, or unordered | Cluster by design+implementation cohesion; order by `depends_on` (#3). |
+| Sections grouped by file, or unordered | Cluster by design+implementation cohesion (#3). |
+| PRD ordered components-before-screens (build order) | PRD/Lark use `prd_order` — screens first, then their dialogs; build order is `impl_order`/`depends_on` (#3). |
+| Lark doc defaults to Chinese, or a literal label like `看起来正确当` | Default English; idiomatic glossary labels (#9). |
+| Section parts as `**bold**:` in one paragraph; no H1 over the features; missing Branch/Base/Date in the Lark doc | Canonical format: one H1 + metadata, parallel H3 sub-sections incl. the prompt (#9). |
+| Discovering Lark auth is broken at Phase 3 | Precheck publisher + auth in Phase 0, before capture (reference.md). |
+| Callout never drew (`found: undefined`) | Draw in-page via `page.evaluate`; `run-code --filename` runs Node-side (reference.md, badge.js). |
 | Leaking SSH/IP/port/`*-prototype` rules into the dev prompt | `IMPLEMENTATION.md` is environment-agnostic (#5). |
 | Hardcoding `192.168.x.x:3100` in the skill's commands | Resolve `PREVIEW_BASE` at runtime (#6). |
 | Regenerating a brand-new PRD on a re-run | Detect the manifest → update in place (Phase 0/3). |
@@ -206,4 +227,9 @@ never loses work.
 - About to publish a Lark section whose implementation prompt is missing or just a link/paraphrase → STOP, embed the full prompt as a code block under that section.
 - About to publish a screenshot's legend as BOTH an image caption and a separate text line → STOP, caption only (the text line is the duplicate).
 - About to publish an implementation prompt with no "review before use" disclaimer before it → STOP, add the auto-generated disclaimer callout above the prompt.
+- About to start capturing screenshots before confirming the publisher is authenticated → STOP, precheck auth in Phase 0.
+- About to publish in Chinese by default, or write a label like `看起来正确当` → STOP, default English, idiomatic glossary labels (#9).
+- About to write a section's parts as `**bold**:` labels in one paragraph, or drop the H1/metadata → STOP, canonical format: H1 + metadata + parallel H3 sub-sections (#9).
+- About to order the PRD components-before-screens → STOP, PRD is narrative (`prd_order`): screens first, then their dialogs (#3).
+- About to `pkill -f <pattern>` to kill a preview → STOP, it can self-match your ssh/shell; kill by port/pid.
 - Skipping `manifest.json` "because it's a one-off" → STOP, it's the update contract.
