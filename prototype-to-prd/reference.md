@@ -104,21 +104,38 @@ screenshots as image blocks (they already have callouts burned in — no Lark-na
 
 **Create:**
 1. Create a standalone Docx in the resolved folder, titled `PRD — <feature> (<date>)`.
-2. Append blocks **in `order`**, per section: heading → image block (uploaded screenshot) →
-   human content (what/why/acceptance, from `PRD.md`) → **the section's _entire_ implementation
-   prompt from `IMPLEMENTATION.md` as a single code block** — Goal, code refs, diff, acceptance, and
-   verify all in **one** block, **not just the diff** — so the developer copies the whole prompt in
-   one action. The prompt goes **under the same section heading**; this is the PRD↔IMPLEMENTATION
-   merge, and it happens **only** in the Lark doc (the local `PRD.md`/`IMPLEMENTATION.md` stay
-   separate).
+2. Append blocks **in `order`**, per section:
+   - **heading**
+   - **one image block per mark** (uploaded screenshot; callouts already burned in). Put the mark's
+     callout/legend text in the **image block's caption** (the line Lark renders under the picture).
+     Do **NOT** also emit the PRD's `**Legend:**` line as a separate paragraph — that creates the
+     duplicate seen in practice (one caption under the image, one as body text). The image caption is
+     the *only* place the legend appears in Lark. With multiple marks, each image gets its own
+     caption.
+   - **human content** — what / why / "Looks right when", from `PRD.md`, **minus the `**Legend:**`
+     line** (that line is now the image caption) and minus the `_Implementation prompt → …_` pointer.
+   - **the section's _entire_ implementation prompt** from `IMPLEMENTATION.md` as a single code block
+     — Goal, code refs, diff, acceptance, and verify all in **one** block, **not just the diff** —
+     under the same section heading. This is the PRD↔IMPLEMENTATION merge; it happens **only** in the
+     Lark doc (the local `PRD.md`/`IMPLEMENTATION.md` stay separate).
+   - **an auto-generated disclaimer** immediately after the prompt — a **callout / highlight block**
+     (not part of the code block, so it can't be copied along with the prompt), reminding the
+     developer the prompt is machine-generated and must be reviewed. Match the doc's language, e.g.:
+     - ZH: *⚠️ 本实现提示由原型 diff 与设计意图自动生成，是实现起点而非经过验证的最终代码。使用前请结合本项目代码核对并按需调整，不要直接照搬运行。*
+     - EN: *⚠️ This implementation prompt was auto-generated from the prototype diff and design
+       intent — a starting point, not verified production code. Review and adapt it against your
+       codebase before using; don't run it as-is.*
 3. Record `lark.doc_token`, `lark.url`, and `lark.block_map` (section id → list of block ids,
-   **including the prompt code block**) into `manifest.json`.
+   **including each image's caption, the prompt code block, and the disclaimer block**) into
+   `manifest.json`.
 
 **Update (manifest exists):**
 1. For each changed section, use `block_map` to target its blocks: replace text, swap the image
-   block's media, **refresh the implementation-prompt code block**, and insert/delete/move blocks for
-   added/removed/reordered sections. (Each section's blocks include its prompt code block, so the
-   merge is preserved on every update.)
+   block's media **and its caption**, **refresh the implementation-prompt code block**, keep the
+   auto-generated disclaimer in place, and insert/delete/move blocks for added/removed/reordered
+   sections. (Each section's blocks include its image caption(s), prompt code block, and disclaimer,
+   so the legend-as-caption and the disclaimer are preserved on every update — never re-introduce a
+   separate `Legend:` paragraph.)
 2. Refresh `block_map`; keep the same `doc_token` and URL.
 3. **Reliability fallback:** if per-block image surgery proves flaky, rebuild the whole doc body
    under the same `doc_token` (clear + re-append) so the **URL stays stable**.

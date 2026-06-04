@@ -52,8 +52,10 @@ These are exactly the things an unguided agent skips. Do not skip them:
    they stay two files: `PRD.md` is human-only (what/why/acceptance), `IMPLEMENTATION.md` holds the
    per-section copy-pasteable prompts. When you **publish to Lark**, merge them — under each section,
    right after the human content, place that section's **entire** implementation prompt (Goal →
-   verify, **not just the diff**) as a **single code block** (copyable, run-as-is). Never blend
-   prompt and prose into one paragraph, and never leave a Lark
+   verify, **not just the diff**) as a **single code block**, immediately followed by an
+   **auto-generated disclaimer** callout (the prompt is a starting point, not verified code — the dev
+   must review it before use). Render each mark's legend as the **image caption**, never as a
+   duplicate text line. Never blend prompt and prose into one paragraph, and never leave a Lark
    section merely *linking to* or paraphrasing the prompt — the copyable block must be present
    in-section.
 3. **Order sections by implementation dependency** (`order` + `depends_on`) so the handoff reads as
@@ -150,11 +152,12 @@ never loses work.
 
 1. Write `prd/<date>-<feature>/{manifest.json, PRD.md, IMPLEMENTATION.md, screenshots/}`.
 2. Publish/update the standalone Lark Docx via `lark-doc` (block-by-block steps in `reference.md`):
-   - **Create:** new Docx in the resolved folder; append blocks in `order` (heading → screenshot
-     image block → human content → the **entire** implementation prompt as one copyable **code
-     block** under the section, not just the diff — the PRD↔IMPL merge). Record `lark.doc_token`,
-     `url`, and `block_map` (section → block
-     IDs) into the manifest.
+   - **Create:** new Docx in the resolved folder; append blocks in `order` (heading → one image
+     block per mark, legend as the **image caption** not a separate text line → human content → the
+     **entire** implementation prompt as one copyable **code block** under the section, not just the
+     diff → an **auto-generated disclaimer** callout reminding the dev to review the prompt — the
+     PRD↔IMPL merge). Record `lark.doc_token`, `url`, and `block_map` (section → block IDs) into the
+     manifest. Caption + disclaimer rules: `reference.md`.
    - **Update:** apply **targeted block ops** to the *same* doc via `block_map` (replace text, swap
      image media, insert/delete/move blocks for added/removed/reordered sections); refresh
      `block_map`; keep the same URL. **Fallback** if per-block image surgery is flaky: rebuild the
@@ -183,6 +186,8 @@ never loses work.
 | "Looks right when" lists TypeScript compile checks or CSS class values | Acceptance items must be observable by a person in the running product; technical DoD goes in IMPLEMENTATION.md (#8). |
 | Local `PRD.md` carries the full prompt, or one blended doc | Keep `PRD.md` human-only and `IMPLEMENTATION.md` separate locally (#2). |
 | Lark section only *links to* / paraphrases the prompt | Embed the section's full prompt as a copyable **code block** under that section in the Lark doc (#2). |
+| Legend appears twice in Lark (image caption + a text line) | Put the legend in the image caption only; drop the `Legend:` paragraph when publishing (reference.md). |
+| Lark prompt reads like final, ready-to-paste code with no caveat | Add the auto-generated "review before use" disclaimer callout after each prompt (#2, reference.md). |
 | Sections grouped by file, or unordered | Cluster by design+implementation cohesion; order by `depends_on` (#3). |
 | Leaking SSH/IP/port/`*-prototype` rules into the dev prompt | `IMPLEMENTATION.md` is environment-agnostic (#5). |
 | Hardcoding `192.168.x.x:3100` in the skill's commands | Resolve `PREVIEW_BASE` at runtime (#6). |
@@ -199,4 +204,6 @@ never loses work.
 - About to `git checkout <base>` on the shared remote checkout → STOP, use a worktree.
 - About to create a second Lark doc when one already exists → STOP, update in place.
 - About to publish a Lark section whose implementation prompt is missing or just a link/paraphrase → STOP, embed the full prompt as a code block under that section.
+- About to publish a screenshot's legend as BOTH an image caption and a separate text line → STOP, caption only (the text line is the duplicate).
+- About to publish an implementation prompt with no "review before use" disclaimer after it → STOP, add the auto-generated disclaimer callout.
 - Skipping `manifest.json` "because it's a one-off" → STOP, it's the update contract.
